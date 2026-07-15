@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import nest_asyncio
 from telegram import Update, BotCommand
 from telegram.ext import (
     Application,
@@ -115,15 +116,14 @@ async def post_init(application: Application):
 
 def main():
     """Главная функция запуска бота"""
+    nest_asyncio.apply()
+
     print("=" * 50)
     print("SweetHomeBot - Запуск...")
     print("=" * 50)
 
     # Проверяем конфигурацию
     validate_config()
-
-    # Инициализируем базу данных
-    asyncio.run(init_db())
 
     # Создаём приложение
     application = (
@@ -158,7 +158,9 @@ def main():
     # Запускаем бота
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
+
 if __name__ == "__main__":
-    import nest_asyncio
-    nest_asyncio.apply()
+    main()
+
+if __name__ == "__main__":
     main()
