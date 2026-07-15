@@ -118,13 +118,13 @@ def main():
     print("=" * 50)
     print("SweetHomeBot - Запуск...")
     print("=" * 50)
-    
+
     # Проверяем конфигурацию
     validate_config()
-    
+
     # Инициализируем базу данных
-    asyncio.get_event_loop().run_until_complete(init_db())
-    
+    asyncio.run(init_db())
+
     # Создаём приложение
     application = (
         Application.builder()
@@ -132,31 +132,33 @@ def main():
         .post_init(post_init)
         .build()
     )
-    
+
     # Регистрируем обработчики
     application.add_handler(CommandHandler("start", start_handler))
     application.add_handler(CommandHandler("buy", buy_handler))
     application.add_handler(CommandHandler("stats", stats_handler))
     application.add_handler(CommandHandler("reset_balance", reset_balance_handler))
-    
+
     # Обработчик предварительной проверки оплаты
     application.add_handler(PreCheckoutQueryHandler(pre_checkout_handler))
-    
+
     # Обработчик успешной оплаты
     application.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment_handler))
-    
+
     # Обработчик нажатий на инлайн-кнопки
     application.add_handler(CallbackQueryHandler(handle_callback_query))
-    
+
     # Обработчик текстовых сообщений (в конце, чтобы ловить всё остальное)
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_handler))
-    
+
     print("[BOT] Бот запущен и готов к работе!")
     print("[BOT] Нажми Ctrl+C для остановки")
     print("=" * 50)
-    
+
     # Запускаем бота
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == "__main__":
+    import nest_asyncio
+    nest_asyncio.apply()
     main()
