@@ -1,11 +1,15 @@
 import sqlite3
 import aiosqlite
 import json
+import os
 
-DB_PATH = "sweethome.db"
+# Абсолютный путь — garantнно одна БД
+DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "sweethome.db")
+DB_PATH = os.path.normpath(DB_PATH)
 
 def _init_db_sync():
     """Синхронная инициализация таблиц"""
+    print(f"[DB] Путь к БД: {DB_PATH}")
     conn = sqlite3.connect(DB_PATH)
     conn.execute("""
         CREATE TABLE IF NOT EXISTS users (
@@ -17,18 +21,28 @@ def _init_db_sync():
         )
     """)
     conn.commit()
+    # Проверяем что таблица создана
+    cursor = conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='users'")
+    result = cursor.fetchone()
     conn.close()
-    print("[DB] Таблицы созданы (синхронно)")
+    if result:
+        print("[DB] Таблица users создана успешно")
+    else:
+        print("[DB] ОШИБКА: таблица users не создана!")
 
-# Создаём таблицы при импорте модуля — гарантированно до любого запроса
+# Создаём таблицы при импорте
 _init_db_sync()
 
 async def init_db():
-    """Асинхронная инициализация (уже создана синхронно)"""
-    print("[DB] База данных готова")
+    """Асинхронная инициализация"""
+    # Дополнительно проверяем при старте бота
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute("SELECT COUNT(*) FROM users")
+    conn.close()
+    print("[DB] База данных проверена")
 
 async def _run(sql, params=None):
-    """Выполнить SQL-запрос через aiosqlite"""
+    """Выполнить SQL-запрос"""
     db = await aiosqlite.connect(DB_PATH)
     try:
         if params:
